@@ -2,7 +2,6 @@
   <div>
     <h2 class="text-2xl font-semibold mb-4">Issue Approved Requisitions (FIFO)</h2>
 
-    <!-- ▼ Step 1: choose an approved requisition -->
     <el-select
       v-model="selected"
       placeholder="Select requisition"
@@ -18,7 +17,6 @@
       />
     </el-select>
 
-    <!-- ▼ Step 2: show breakdown + estimated FIFO cost -->
     <el-table v-if="selected" :data="selected.items" class="mt-6">
       <el-table-column prop="name" label="Item" />
       <el-table-column prop="pivot.qty" label="Qty" width="100" />
@@ -38,7 +36,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import api from '@/api/axios'
+import { useNotifier } from '@/composables/useNotifier'
 
 interface ReqItem {
   id: number
@@ -51,24 +51,30 @@ interface Req {
   items: ReqItem[]
 }
 
+const { showSuccess, showError } = useNotifier()
 const approved = ref<Req[]>([])
 const selected = ref<Req | null>(null)
 const costMap = reactive<Record<number, number>>({})
 const grandTotal = computed(() => Object.values(costMap).reduce((a, b) => a + b, 0))
 const saving = ref(false)
 
-// Fetch approved requisitions for store exec
 const fetchApproved = async () => {
-  approved.value = (await api.get('/requisitions/approved')).data
+  try {
+    approved.value = (await api.get('/requisitions/approved')).data
+  } catch (err) {
+    showError('Failed to load approved requisitions')
+  }
 }
 
-// Optional preview of FIFO cost (server returns price per item)
 const previewCost = async () => {
   Object.keys(costMap).forEach((k) => delete costMap[+k])
   if (!selected.value) return
-  const res = await api.post('/stock/fifo-preview', { requisition_id: selected.value.id })
-  console.log('FIFO preview response:', res.data)
-  Object.assign(costMap, res.data.item_totals) // e.g. { '3': 460, '5': 1200 }
+  try {
+    const res = await api.post('/stock/fifo-preview', { requisition_id: selected.value.id })
+    Object.assign(costMap, res.data.item_totals)
+  } catch (err) {
+    showError('Failed to fetch FIFO preview')
+  }
 }
 
 const issue = async () => {
@@ -76,8 +82,11 @@ const issue = async () => {
   saving.value = true
   try {
     await api.post(`/stock/issue/${selected.value.id}`)
+    showSuccess('Items issued successfully!')
     await fetchApproved()
     selected.value = null
+  } catch (err) {
+    showError('Failed to issue requisition')
   } finally {
     saving.value = false
   }
