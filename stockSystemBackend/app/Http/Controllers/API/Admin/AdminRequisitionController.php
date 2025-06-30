@@ -50,7 +50,7 @@ class AdminRequisitionController extends Controller
     }
 
     /**
-     * Get all approved requisitions.
+     * Get all approved requisitions. and not completed.
      *
      * @return JsonResponse
      */
@@ -58,6 +58,7 @@ class AdminRequisitionController extends Controller
     {
         $requisitions = Requisition::with(['creator', 'items'])
             ->where('status', 'approved')
+            ->where('status', '!=', 'completed')
             ->latest()
             ->get();
 

@@ -84,6 +84,8 @@ class StockMovementService
                 if ($remaining > 0) {
                     throw new RuntimeException('Insufficient stock for item ' . $item->id);
                 }
+                $req->status = 'completed';
+                $req->save();
             }
         });
     }
