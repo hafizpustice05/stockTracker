@@ -1,4 +1,4 @@
-# Stock Management System
+# Store Management System
 
 A **full-featured**, **role-based**, and **production-grade** inventory/requisition management system.
 
