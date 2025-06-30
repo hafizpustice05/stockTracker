@@ -3,17 +3,17 @@
     <h2 class="text-2xl font-semibold mb-4">Issue Approved Requisitions (FIFO)</h2>
 
     <el-select
-      v-model="selected"
+      v-model="selectedId"
       placeholder="Select requisition"
       filterable
       class="w-96"
-      @change="previewCost"
+      @change="onSelect"
     >
       <el-option
         v-for="r in approved"
         :key="r.id"
         :label="`#${r.id} — ${r.creator.name}`"
-        :value="r"
+        :value="r.id"
       />
     </el-select>
 
@@ -39,6 +39,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '@/api/axios'
 import { useNotifier } from '@/composables/useNotifier'
+const selectedId = ref<number | null>(null)
 
 interface ReqItem {
   id: number
@@ -57,6 +58,11 @@ const selected = ref<Req | null>(null)
 const costMap = reactive<Record<number, number>>({})
 const grandTotal = computed(() => Object.values(costMap).reduce((a, b) => a + b, 0))
 const saving = ref(false)
+
+const onSelect = () => {
+  selected.value = approved.value.find((r) => r.id === selectedId.value) || null
+  previewCost()
+}
 
 const fetchApproved = async () => {
   try {
@@ -85,6 +91,7 @@ const issue = async () => {
     showSuccess('Items issued successfully!')
     await fetchApproved()
     selected.value = null
+    selectedId.value = null
   } catch (err) {
     showError('Failed to issue requisition')
   } finally {
