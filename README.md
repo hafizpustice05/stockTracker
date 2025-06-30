@@ -59,6 +59,13 @@ php artisan migrate --seed
 
 ```
 
+After seeding those users created with credential
+| Role | Email | Password |
+| ------------------ | ----------------------- | ---------- |
+| 🛠 Admin | `admin@example.com` | `password` |
+| 🏬 Store Executive | `executive@example.com` | `password` |
+| 👤 Employee | `employee@example.com` | `password` |
+
 ### 5. run the backend
 
 ```bash
